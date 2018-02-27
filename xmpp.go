@@ -191,6 +191,9 @@ type Options struct {
 
 	// Status message
 	StatusMessage string
+
+	// Logger
+	Logger io.Writer
 }
 
 // NewClient establishes a new Client connection based on a set of Options.
@@ -524,7 +527,7 @@ func (c *Client) startTLSIfRequired(f *streamFeatures, o *Options, domain string
 // will be returned.
 func (c *Client) startStream(o *Options, domain string) (*streamFeatures, error) {
 	if o.Debug {
-		c.p = xml.NewDecoder(tee{c.conn, os.Stderr})
+		c.p = xml.NewDecoder(tee{c.conn, o.Logger})
 	} else {
 		c.p = xml.NewDecoder(c.conn)
 	}
@@ -657,7 +660,7 @@ func (c *Client) Send(chat Chat) (n int, err error) {
 	if chat.Thread != `` {
 		thdtext = `<thread>` + xmlEscape(chat.Thread) + `</thread>`
 	}
-	return fmt.Fprintf(c.conn, "<message to='%s' type='%s' xml:lang='en'>" + subtext + "<body>%s</body>" + thdtext + "</message>",
+	return fmt.Fprintf(c.conn, "<message to='%s' type='%s' xml:lang='en'>"+subtext+"<body>%s</body>"+thdtext+"</message>",
 		xmlEscape(chat.Remote), xmlEscape(chat.Type), xmlEscape(chat.Text))
 }
 
